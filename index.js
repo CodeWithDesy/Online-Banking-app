@@ -49,6 +49,11 @@ api.put('/accounts/:id', fetchAccountAndUpdate)
 api.post('/transactions/backdate', backdateTransaction)
 api.get('/transactions/:customerId', fetchCustomerTransactions)
 
+// ✅ Test route
+api.get("/", (req, res) => {
+  res.send("Backend is live 🚀");
+});
+
 api.all('/', basePath)
 api.use(falsePath)
 
