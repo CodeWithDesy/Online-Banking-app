@@ -4,6 +4,12 @@ const mongoose = require('mongoose')
 const dotenv = require('dotenv')
 dotenv.config()
 
+console.log('=== ENVIRONMENT VARIABLES CHECK ===');
+console.log('MONGO_URI exists:', !!process.env.MONGO_URI);
+console.log('MONGO_URI length:', process.env.MONGO_URI?.length);
+console.log('MONGO_URI starts with:', process.env.MONGO_URI?.substring(0, 20));
+console.log('===================================');
+
 const { signupUser, loginUser } = require('./controller/user.controller')
 const { validateSignupMiddleware, validateLoginMiddleware } = require('./validator/auth.validator')
 const { createAccount, fetchAccount, fetchAccountById, basePath, falsePath, fetchAccountAndUpdate } = require('./controller/account.controller')
@@ -50,6 +56,8 @@ api.use(falsePath)
 
 api.listen(PORT, async () => {
     console.log(`Server live on ${PORT}`)
-    await mongoose.connect('mongodb://127.0.0.1:27017/linzBank');
+    const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/linzBank';
+    console.log('Connecting to:', MONGO_URI.includes('mongodb.net') ? 'MongoDB Atlas' : 'Local MongoDB');
+    await mongoose.connect(MONGO_URI);
     console.log('database connected')
 })
