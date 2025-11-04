@@ -57,6 +57,13 @@ api.get("/", (req, res) => {
 api.all('/', basePath)
 api.use(falsePath)
 
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://linzamericanbank.netlify.app', 
+];
+
 
 
 api.listen(PORT, async () => {
