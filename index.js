@@ -35,6 +35,17 @@ api.use((req, res, next) => {
     next();
 });
 
+api.use(cors({
+    origin: [
+        'http://localhost:5500',
+        'http://127.0.0.1:5500',
+        'https://your-netlify-site.netlify.app', 
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 api.use(express.json())
 api.use(express.urlencoded({extended:true}))
 
@@ -56,14 +67,6 @@ api.get("/", (req, res) => {
 
 api.all('/', basePath)
 api.use(falsePath)
-
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://linzamericanbank.netlify.app', 
-];
-
 
 
 api.listen(PORT, async () => {
