@@ -14,7 +14,7 @@ const { signupUser, loginUser } = require('./controller/user.controller')
 const { validateSignupMiddleware, validateLoginMiddleware } = require('./validator/auth.validator')
 const { createAccount, fetchAccount, fetchAccountById, basePath, falsePath, fetchAccountAndUpdate } = require('./controller/account.controller')
 const { isUserAdmin, isTokenValid } = require('./middleware')
-const { backdateTransaction, fetchCustomerTransactions } = require('./controller/transaction.controller')
+const { backdateTransaction, fetchCustomerTransactions, createTransaction } = require('./controller/transaction.controller')
 
 const api = express()
 
@@ -57,6 +57,7 @@ api.get('/accounts', fetchAccount)
 api.get('/accounts/:id', fetchAccountById)
 api.put('/accounts/:id', fetchAccountAndUpdate)
 
+api.post('/transactions', createTransaction)
 api.post('/transactions/backdate', backdateTransaction)
 api.get('/transactions/:customerId', fetchCustomerTransactions)
 

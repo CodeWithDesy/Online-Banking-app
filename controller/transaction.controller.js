@@ -1,17 +1,17 @@
 const Transaction = require('../model/transaction.model');
 const Account = require('../model/account.model');
 
-// Backdate Transaction
-async function backdateTransaction(req, res) {
+// Create Transaction (Deposit/Withdrawal/Transfer)
+async function createTransaction(req, res) {
     try {
-        const { customerId, type, amount, date, description } = req.body;
+        const { customerId, type, amount, description } = req.body;
 
-        console.log('Creating backdated transaction:', { customerId, type, amount, date, description });
+        console.log('Creating transaction:', { customerId, type, amount });
 
         // Validate required fields
-        if (!customerId || !type || !amount || !date || !description) {
+        if (!customerId || !type || !amount || !description) {
             return res.status(400).json({ 
-                message: 'All fields are required: customerId, type, amount, date, description' 
+                message: 'All fields are required: customerId, type, amount, description' 
             });
         }
 
@@ -43,21 +43,13 @@ async function backdateTransaction(req, res) {
         // Adjust balance based on transaction type
         if (type === 'Deposit') {
             newBalance += parseFloat(amount);
-        } else if (type === 'Withdrawal') {
+        } else if (type === 'Withdrawal' || type === 'Transfer') {
             newBalance -= parseFloat(amount);
             
             // Check if sufficient balance
             if (newBalance < 0) {
                 return res.status(400).json({ 
-                    message: 'Insufficient balance for withdrawal' 
-                });
-            }
-        } else if (type === 'Transfer') {
-            newBalance -= parseFloat(amount);
-            
-            if (newBalance < 0) {
-                return res.status(400).json({ 
-                    message: 'Insufficient balance for transfer' 
+                    message: 'Insufficient balance for this transaction' 
                 });
             }
         }
@@ -65,13 +57,11 @@ async function backdateTransaction(req, res) {
         // Create the transaction
         const transaction = new Transaction({
             customerId: customerId,
-            accountNumber: account.accountNumber,
             type: type,
             amount: parseFloat(amount),
             description: description,
             balance: newBalance,
-            date: new Date(date),
-            isBackdated: true
+            date: new Date()
         });
 
         await transaction.save();
@@ -85,6 +75,88 @@ async function backdateTransaction(req, res) {
         await account.save();
 
         console.log('Transaction created successfully:', transaction);
+
+        res.status(201).json({
+            message: 'Transaction completed successfully',
+            data: {
+                transaction: transaction,
+                newBalance: newBalance
+            }
+        });
+
+    } catch (error) {
+        console.error('Error creating transaction:', error);
+        res.status(500).json({ 
+            message: 'Server error while processing transaction',
+            error: error.message 
+        });
+    }
+}
+
+// Backdate Transaction (existing function - keep as is)
+async function backdateTransaction(req, res) {
+    try {
+        const { customerId, type, amount, date, description } = req.body;
+
+        console.log('Creating backdated transaction:', { customerId, type, amount, date, description });
+
+        if (!customerId || !type || !amount || !date || !description) {
+            return res.status(400).json({ 
+                message: 'All fields are required: customerId, type, amount, date, description' 
+            });
+        }
+
+        if (!['Deposit', 'Withdrawal', 'Transfer'].includes(type)) {
+            return res.status(400).json({ 
+                message: 'Invalid transaction type. Must be Deposit, Withdrawal, or Transfer' 
+            });
+        }
+
+        const account = await Account.findById(customerId).populate('transactions');
+
+        if (!account) {
+            return res.status(404).json({ 
+                message: 'Customer account not found' 
+            });
+        }
+
+        let newBalance = account.initialDeposit || 0;
+
+        if (account.transactions && account.transactions.length > 0) {
+            const latestTransaction = account.transactions[account.transactions.length - 1];
+            newBalance = latestTransaction.balance;
+        }
+
+        if (type === 'Deposit') {
+            newBalance += parseFloat(amount);
+        } else if (type === 'Withdrawal' || type === 'Transfer') {
+            newBalance -= parseFloat(amount);
+            
+            if (newBalance < 0) {
+                return res.status(400).json({ 
+                    message: 'Insufficient balance for withdrawal/transfer' 
+                });
+            }
+        }
+
+        const transaction = new Transaction({
+            customerId: customerId,
+            type: type,
+            amount: parseFloat(amount),
+            description: description,
+            balance: newBalance,
+            date: new Date(date),
+            isBackdated: true
+        });
+
+        await transaction.save();
+
+        account.transactions.push(transaction._id);
+        account.initialDeposit = newBalance;
+        
+        await account.save();
+
+        console.log('Backdated transaction created successfully:', transaction);
 
         res.status(201).json({
             message: 'Backdated transaction created successfully',
@@ -125,4 +197,4 @@ async function fetchCustomerTransactions(req, res) {
     }
 }
 
-module.exports = {backdateTransaction, fetchCustomerTransactions};
+module.exports = {createTransaction, backdateTransaction, fetchCustomerTransactions};
