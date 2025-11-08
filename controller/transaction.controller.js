@@ -25,16 +25,20 @@ async function createTransaction(req, res) {
       });
     }
 
-    let newBalance = account.initialDeposit || 0;
+    let currentBalance = account.initialDeposit || 0;
     if (account.transactions.length > 0) {
-      newBalance =
+      currentBalance =
         account.transactions[account.transactions.length - 1].balance;
     }
 
+    // Handle amount based on type
+    const transactionAmount = Math.abs(parseFloat(amount)); // Always use absolute value
+    let newBalance = currentBalance;
+
     if (type === "Deposit") {
-      newBalance += parseFloat(amount);
-    } else {
-      newBalance -= parseFloat(amount);
+      newBalance += transactionAmount;
+    } else { // Withdrawal or Transfer
+      newBalance -= transactionAmount;
       if (newBalance < 0) {
         return res.status(400).json({
           message: "Insufficient balance for this transaction",
@@ -45,7 +49,7 @@ async function createTransaction(req, res) {
     const transaction = await Transaction.create({
       customerId,
       type,
-      amount: parseFloat(amount),
+      amount: type === "Deposit" ? transactionAmount : -transactionAmount, // Store negative for withdrawals
       description,
       balance: newBalance,
       date: new Date(),
@@ -66,6 +70,7 @@ async function createTransaction(req, res) {
     console.error("Error creating transaction:", error);
     res.status(500).json({
       message: "Server error while processing transaction",
+      error: error.message,
     });
   }
 }
@@ -73,6 +78,8 @@ async function createTransaction(req, res) {
 async function backdateTransaction(req, res) {
   try {
     const { customerId, type, amount, date, description } = req.body;
+
+    console.log('📥 Received backdate request:', { customerId, type, amount, date, description });
 
     if (!customerId || !type || !amount || !date || !description) {
       return res.status(400).json({
@@ -95,16 +102,24 @@ async function backdateTransaction(req, res) {
       });
     }
 
-    let newBalance = account.initialDeposit || 0;
+    console.log('✅ Account found:', account.name);
+    console.log('💰 Current balance:', account.initialDeposit);
+
+    // Get current balance
+    let currentBalance = account.initialDeposit || 0;
     if (account.transactions.length > 0) {
-      newBalance =
+      currentBalance =
         account.transactions[account.transactions.length - 1].balance;
     }
 
+    // Handle amount based on type
+    const transactionAmount = Math.abs(parseFloat(amount)); // Always use absolute value
+    let newBalance = currentBalance;
+
     if (type === "Deposit") {
-      newBalance += parseFloat(amount);
-    } else {
-      newBalance -= parseFloat(amount);
+      newBalance += transactionAmount;
+    } else { // Withdrawal or Transfer
+      newBalance -= transactionAmount;
       if (newBalance < 0) {
         return res.status(400).json({
           message: "Insufficient balance for withdrawal/transfer",
@@ -112,19 +127,27 @@ async function backdateTransaction(req, res) {
       }
     }
 
+    console.log('💰 New balance will be:', newBalance);
+
+    // Create transaction with backdated date
     const transaction = await Transaction.create({
       customerId,
       type,
-      amount: parseFloat(amount),
+      amount: type === "Deposit" ? transactionAmount : -transactionAmount, // Store negative for withdrawals
       description,
       balance: newBalance,
-      date: new Date(date),
+      date: new Date(date), // Use the backdated date
       isBackdated: true,
     });
 
+    console.log('✅ Transaction created:', transaction._id);
+
+    // Update account
     account.transactions.push(transaction._id);
     account.initialDeposit = newBalance;
     await account.save();
+
+    console.log('✅ Account updated successfully');
 
     res.status(201).json({
       message: "Backdated transaction created successfully",
@@ -134,9 +157,11 @@ async function backdateTransaction(req, res) {
       },
     });
   } catch (error) {
-    console.error("Error creating backdated transaction:", error);
+    console.error("❌ Error creating backdated transaction:", error);
+    console.error("❌ Error stack:", error.stack);
     res.status(500).json({
       message: "Server error while creating transaction",
+      error: error.message, // Add error details
     });
   }
 }
