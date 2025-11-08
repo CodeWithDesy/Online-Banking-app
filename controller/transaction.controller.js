@@ -32,12 +32,12 @@ async function createTransaction(req, res) {
     }
 
     // Handle amount based on type
-    const transactionAmount = Math.abs(parseFloat(amount)); // Always use absolute value
+    const transactionAmount = Math.abs(parseFloat(amount));
     let newBalance = currentBalance;
 
     if (type === "Deposit") {
       newBalance += transactionAmount;
-    } else { // Withdrawal or Transfer
+    } else {
       newBalance -= transactionAmount;
       if (newBalance < 0) {
         return res.status(400).json({
@@ -48,8 +48,9 @@ async function createTransaction(req, res) {
 
     const transaction = await Transaction.create({
       customerId,
+      accountNumber: account.accountNumber, // ← ADD THIS LINE
       type,
-      amount: type === "Deposit" ? transactionAmount : -transactionAmount, // Store negative for withdrawals
+      amount: type === "Deposit" ? transactionAmount : -transactionAmount,
       description,
       balance: newBalance,
       date: new Date(),
@@ -104,6 +105,7 @@ async function backdateTransaction(req, res) {
 
     console.log('✅ Account found:', account.name);
     console.log('💰 Current balance:', account.initialDeposit);
+    console.log('🔢 Account number:', account.accountNumber); // Add this
 
     // Get current balance
     let currentBalance = account.initialDeposit || 0;
@@ -129,14 +131,15 @@ async function backdateTransaction(req, res) {
 
     console.log('💰 New balance will be:', newBalance);
 
-    // Create transaction with backdated date
+    // Create transaction with backdated date and accountNumber
     const transaction = await Transaction.create({
       customerId,
+      accountNumber: account.accountNumber, // ← ADD THIS LINE
       type,
-      amount: type === "Deposit" ? transactionAmount : -transactionAmount, // Store negative for withdrawals
+      amount: type === "Deposit" ? transactionAmount : -transactionAmount,
       description,
       balance: newBalance,
-      date: new Date(date), // Use the backdated date
+      date: new Date(date),
       isBackdated: true,
     });
 
@@ -161,7 +164,7 @@ async function backdateTransaction(req, res) {
     console.error("❌ Error stack:", error.stack);
     res.status(500).json({
       message: "Server error while creating transaction",
-      error: error.message, // Add error details
+      error: error.message,
     });
   }
 }
