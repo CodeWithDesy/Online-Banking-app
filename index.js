@@ -1,7 +1,7 @@
-const express = require('express')
-const cors = require('cors')
-const mongoose = require('mongoose')
-const dotenv = require('dotenv')
+import express from "express";
+import mongoose from "mongoose"
+import cors from "cors"
+import dotenv from "dotenv";
 dotenv.config()
 
 console.log('=== ENVIRONMENT VARIABLES CHECK ===');
@@ -10,11 +10,12 @@ console.log('MONGO_URI length:', process.env.MONGO_URI?.length);
 console.log('MONGO_URI starts with:', process.env.MONGO_URI?.substring(0, 20));
 console.log('===================================');
 
-const { signupUser, loginUser } = require('./controller/user.controller')
-const { validateSignupMiddleware, validateLoginMiddleware } = require('./validator/auth.validator')
-const { createAccount, fetchAccount, fetchAccountById, basePath, falsePath, fetchAccountAndUpdate } = require('./controller/account.controller')
-const { isUserAdmin, isTokenValid } = require('./middleware')
-const { backdateTransaction, fetchCustomerTransactions, createTransaction } = require('./controller/transaction.controller')
+import { signupUser, loginUser } from './controller/user.controller.js'
+import { validateSignupMiddleware, validateLoginMiddleware } from './validator/auth.validator.js'
+import { createAccount, fetchAccount, fetchAccountById, basePath, falsePath, fetchAccountAndUpdate } from './controller/account.controller.js'
+import { isUserAdmin, isTokenValid } from './middleware/index.js'
+import { backdateTransaction, fetchCustomerTransactions, createTransaction } from './controller/transaction.controller.js'
+import { fetchMessage, sendMessage } from './controller/contact.controller.js'
 
 const api = express()
 
@@ -56,6 +57,9 @@ api.post('/account', createAccount)
 api.get('/accounts', fetchAccount)
 api.get('/accounts/:id', fetchAccountById)
 api.put('/accounts/:id', fetchAccountAndUpdate)
+
+api.post('/message', sendMessage)
+api.get('/messages', fetchMessage)
 
 api.post('/transactions', createTransaction)
 api.post('/transactions/backdate', backdateTransaction)

@@ -1,7 +1,7 @@
-const mongoose = require('mongoose')
-const bcrypt = require('bcryptjs')
-const JWT = require('jsonwebtoken')
-const dotenv = require('dotenv')
+import express from "express";
+import mongoose from "mongoose"
+import cors from "cors"
+import dotenv from "dotenv";
 dotenv.config()
 
 const {Schema} = mongoose
@@ -32,4 +32,4 @@ userSchema.method('generateToken', function () {
 
 const User = mongoose.model('User', userSchema)
 
-module.exports = User
+export default User

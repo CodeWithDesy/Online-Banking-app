@@ -1,4 +1,4 @@
-const Joi = require('joi')
+import Joi from 'joi'
 
 const signupSchema = Joi.object({
     username: Joi.string() 
@@ -45,4 +45,4 @@ const validateLoginMiddleware = (req, res, next) => {
     }
 }
 
-module.exports = {validateSignupMiddleware, validateLoginMiddleware}
+export {validateSignupMiddleware, validateLoginMiddleware}

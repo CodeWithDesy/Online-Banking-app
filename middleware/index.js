@@ -1,5 +1,5 @@
-const JWT = require('jsonwebtoken')
-const dotenv = require('dotenv')
+import JWT from 'jsonwebtoken'
+import dotenv from 'dotenv'
 dotenv.config()
 
 const isTokenValid = (req, res, next) => {
@@ -40,4 +40,4 @@ const isUserAdmin = (req, res, next) => {
     }
 }
 
-module.exports = {isTokenValid, isUserAdmin}
+export {isTokenValid, isUserAdmin}

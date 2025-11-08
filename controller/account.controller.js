@@ -1,4 +1,4 @@
-const Account = require('../model/account.model');
+import Account from '../model/account.model.js'
 
 async function createAccount(req, res) {
     try {
@@ -66,4 +66,4 @@ async function fetchAccountAndUpdate(req, res) {
     }
  }
 
- module.exports = {basePath, falsePath, createAccount, fetchAccount, fetchAccountById, fetchAccountAndUpdate}
+ export {createAccount, fetchAccount, fetchAccountById, basePath, falsePath, fetchAccountAndUpdate}
